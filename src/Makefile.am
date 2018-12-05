@@ -5,9 +5,37 @@ noinst_HEADERS = action-globals.h \
 	source-windivert-prototypes.h \
 	suricata-common.h threadvars.h tree.h \
     util-validate.h
-bin_PROGRAMS = suricata
+bin_PROGRAMS = suricata fuzz_detectproto
+noinst_LIBRARIES = libsuri.a
 
-suricata_SOURCES = \
+# set the include path found by configure
+AM_CPPFLAGS = $(all_includes)
+
+suricata_SOURCES = suricata.c suricata.h
+suricata_DEPENDENCIES = libsuriall.a
+
+libsuri_a_LIBADD =
+
+if HAVE_RUST
+libsuriall.a: libsuri.a $(RUST_SURICATA_LIB)
+	echo -e "create libsuriall.a\naddlib libsuri.a\naddlib ../rust/target/release/libsuricata.a\nsave\nend"| ar -M
+else
+libsuriall.a: libsuri.a
+	cp libsuri.a libsuriall.a
+endif
+
+# the library search path.
+suricata_LDFLAGS = $(all_libraries) ${SECLDFLAGS}
+suricata_LDADD = $(HTP_LDADD) $(RUST_LDADD) libsuriall.a
+
+fuzz_detectproto_SOURCES = tests/fuzz/onefile.c tests/fuzz/fuzz_detectproto.c
+fuzz_detectproto_DEPENDENCIES = libsuriall.a
+
+# the library search path.
+fuzz_detectproto_LDFLAGS = $(all_libraries) ${SECLDFLAGS}
+fuzz_detectproto_LDADD = $(HTP_LDADD) $(RUST_LDADD) libsuriall.a
+
+libsuri_a_SOURCES = \
 alert-debuglog.c alert-debuglog.h \
 alert-fastlog.c alert-fastlog.h \
 alert-prelude.c alert-prelude.h \
@@ -371,7 +399,6 @@ stream-tcp-list.c stream-tcp-list.h \
 stream-tcp-reassemble.c stream-tcp-reassemble.h \
 stream-tcp-sack.c stream-tcp-sack.h \
 stream-tcp-util.c stream-tcp-util.h \
-suricata.c suricata.h \
 threads.c threads.h \
 threads-debug.h threads-profile.h \
 tm-modules.c tm-modules.h \
@@ -500,17 +527,6 @@ win32-service.c win32-service.h \
 win32-syslog.h
 
 EXTRA_DIST = tests
-
-# set the include path found by configure
-AM_CPPFLAGS = $(all_includes)
-
-# the library search path.
-suricata_LDFLAGS = $(all_libraries) ${SECLDFLAGS}
-suricata_LDADD = $(HTP_LDADD) $(RUST_LDADD)
-
-if HAVE_RUST
-suricata_DEPENDENCIES = $(RUST_SURICATA_LIB)
-endif
 
 # default CFLAGS
 AM_CFLAGS = ${OPTIMIZATION_CFLAGS} ${GCC_CFLAGS} ${CLANG_CFLAGS}            \
