@@ -6,36 +6,14 @@ noinst_HEADERS = action-globals.h \
 	suricata-common.h threadvars.h tree.h \
     util-validate.h
 bin_PROGRAMS = suricata fuzz_detectproto
-noinst_LIBRARIES = libsuri.a
-
-# set the include path found by configure
-AM_CPPFLAGS = $(all_includes)
+lib_LTLIBRARIES = libsuri.la
 
 suricata_SOURCES = suricata.c suricata.h
-suricata_DEPENDENCIES = libsuriall.a
 
-libsuri_a_LIBADD =
+# mix with rust library if any
+libsuri_la_LIBADD = $(RUST_SURICATA_LIB)
 
-if HAVE_RUST
-libsuriall.a: libsuri.a $(RUST_SURICATA_LIB)
-	echo -e "create libsuriall.a\naddlib libsuri.a\naddlib ../rust/target/release/libsuricata.a\nsave\nend"| ar -M
-else
-libsuriall.a: libsuri.a
-	cp libsuri.a libsuriall.a
-endif
-
-# the library search path.
-suricata_LDFLAGS = $(all_libraries) ${SECLDFLAGS}
-suricata_LDADD = $(HTP_LDADD) $(RUST_LDADD) libsuriall.a
-
-fuzz_detectproto_SOURCES = tests/fuzz/onefile.c tests/fuzz/fuzz_detectproto.c
-fuzz_detectproto_DEPENDENCIES = libsuriall.a
-
-# the library search path.
-fuzz_detectproto_LDFLAGS = $(all_libraries) ${SECLDFLAGS}
-fuzz_detectproto_LDADD = $(HTP_LDADD) $(RUST_LDADD) libsuriall.a
-
-libsuri_a_SOURCES = \
+libsuri_la_SOURCES = \
 alert-debuglog.c alert-debuglog.h \
 alert-fastlog.c alert-fastlog.h \
 alert-prelude.c alert-prelude.h \
@@ -527,6 +505,18 @@ win32-service.c win32-service.h \
 win32-syslog.h
 
 EXTRA_DIST = tests
+
+# set the include path found by configure
+AM_CPPFLAGS = $(all_includes)
+
+# the library search path.
+suricata_LDFLAGS = $(all_libraries) ${SECLDFLAGS}
+suricata_LDADD = libsuri.la $(HTP_LDADD) $(RUST_LDADD)
+
+fuzz_detectproto_SOURCES = tests/fuzz/onefile.c tests/fuzz/fuzz_detectproto.c
+# the library search path.
+fuzz_detectproto_LDFLAGS = $(all_libraries) ${SECLDFLAGS}
+fuzz_detectproto_LDADD = libsuri.la $(HTP_LDADD) $(RUST_LDADD)
 
 # default CFLAGS
 AM_CFLAGS = ${OPTIMIZATION_CFLAGS} ${GCC_CFLAGS} ${CLANG_CFLAGS}            \

@@ -2350,7 +2350,6 @@ fi
             else
               RUST_SURICATA_LIB="../rust/target/release/${RUST_SURICATA_LIBNAME}"
             fi
-            RUST_LDADD="${RUST_SURICATA_LIB} ${RUST_LDADD}"
             CFLAGS="${CFLAGS} -I\${srcdir}/../rust/gen/c-headers"
             AC_SUBST(RUST_SURICATA_LIB)
             AC_SUBST(RUST_LDADD)

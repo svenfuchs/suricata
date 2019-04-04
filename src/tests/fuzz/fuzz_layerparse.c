@@ -21,6 +21,10 @@
 #include "stream-tcp-private.h"
 #include "app-layer-parser.h"
 
+#ifdef HAVE_RUST
+#include "rust.h"
+#include "rust-core-gen.h"
+#endif
 
 #define HEADER_LEN 6
 
