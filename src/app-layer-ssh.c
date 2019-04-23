@@ -69,7 +69,7 @@ static int SSHParseBanner(SshState *state, SshHeader *header, const uint8_t *inp
     uint32_t line_len = input_len;
 
     /* is it the version line? */
-    if (line_len >= 4 && SCMemcmp("SSH-", line_ptr, 4) != 0) {
+    if (line_len < 4 || SCMemcmp("SSH-", line_ptr, 4) != 0) {
         SCReturnInt(-1);
     }
 
@@ -125,11 +125,13 @@ static int SSHParseBanner(SshState *state, SshHeader *header, const uint8_t *inp
     /* sanity check on this arithmetic */
     if ((sw_ver_len <= 1) || (sw_ver_len >= input_len)) {
         SCLogDebug("Should not have sw version length '%" PRIu64 "'", sw_ver_len);
+        header->flags |= SSH_FLAG_VERSION_PARSED;
         SCReturnInt(-1);
     }
 
     header->software_version = SCMalloc(sw_ver_len + 1);
     if (header->software_version == NULL) {
+        header->flags |= SSH_FLAG_VERSION_PARSED;
         SCReturnInt(-1);
     }
     memcpy(header->software_version, line_ptr, sw_ver_len);
