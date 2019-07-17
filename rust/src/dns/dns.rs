@@ -531,6 +531,21 @@ fn probe(input: &[u8]) -> (bool, bool) {
     }
 }
 
+fn probe_srv(input: &[u8]) -> bool {
+    parser::dns_parse_response(input).is_ok()
+}
+
+#[no_mangle]
+pub extern "C" fn rs_dns_probe_srv(input: *const u8, len: u32)
+                                   -> u8
+{
+    let slice = build_slice!(input,len as usize);
+    if probe_srv(slice) {
+        return 1;
+    }
+    return 0;
+}
+
 /// Probe TCP input to see if it looks like DNS.
 pub fn probe_tcp(input: &[u8]) -> (bool, bool) {
     match nom::be_u16(input) {
