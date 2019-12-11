@@ -877,8 +877,10 @@ static int HTPHandleRequestData(Flow *f, void *htp_state,
     if (AppLayerParserStateIssetFlag(pstate, APP_LAYER_PARSER_EOF) &&
         !(hstate->flags & HTP_FLAG_STATE_CLOSED_TS))
     {
-        htp_connp_close(hstate->connp, &ts);
         hstate->flags |= HTP_FLAG_STATE_CLOSED_TS;
+        if (hstate->flags & HTP_FLAG_STATE_CLOSED_TC) {
+            htp_connp_close(hstate->connp, &ts);
+        }
         SCLogDebug("stream eof encountered, closing htp handle for ts");
     }
 
@@ -939,8 +941,10 @@ static int HTPHandleResponseData(Flow *f, void *htp_state,
     if (AppLayerParserStateIssetFlag(pstate, APP_LAYER_PARSER_EOF) &&
         !(hstate->flags & HTP_FLAG_STATE_CLOSED_TC))
     {
-        htp_connp_close(hstate->connp, &ts);
         hstate->flags |= HTP_FLAG_STATE_CLOSED_TC;
+        if (hstate->flags & HTP_FLAG_STATE_CLOSED_TS) {
+            htp_connp_close(hstate->connp, &ts);
+        }
     }
 
     SCLogDebug("hstate->connp %p", hstate->connp);
